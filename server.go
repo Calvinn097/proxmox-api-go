@@ -1,4 +1,4 @@
-package maina
+package main
 
 import (
 	"crypto/tls"
@@ -12,13 +12,16 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 )
 
-func maina() {
+func main() {
+	insecurevar := true
+	debugvar := false
+	taskTimeoutvar, _ := strconv.Atoi(os.Getenv("TIMEOUT"))
 	var insecure *bool
-	insecure = flag.Bool("insecure", false, "TLS insecure mode")
-	proxmox.Debug = flag.Bool("debug", false, "debug mode")
-	taskTimeout := flag.Int("timeout", 300, "api task timeout in seconds")
-	fvmid := flag.Int("vmid", -1, "custom vmid (instead of auto)")
-	flag.Parse()
+	insecure = &insecurevar        //, false, "TLS insecure mode")
+	proxmox.Debug = &debugvar      //, false, "debug mode")
+	taskTimeout := &taskTimeoutvar //, 300, "api task timeout in seconds")
+	// fvmid := -1                    // "custom vmid (instead of auto)"
+	// flag.Parse()
 	tlsconf := &tls.Config{InsecureSkipVerify: true}
 	if !*insecure {
 		tlsconf = nil
@@ -28,27 +31,33 @@ func maina() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	vmid := *fvmid
-	if vmid < 0 {
-		if len(flag.Args()) > 1 {
-			vmid, err = strconv.Atoi(flag.Args()[len(flag.Args())-1])
-			if err != nil {
-				vmid = 0
-			}
-		} else if flag.Args()[0] == "idstatus" {
-			vmid = 0
-		}
-	}
+	// vmid := *fvmid
+	// if vmid < 0 {
+	// 	if len(flag.Args()) > 1 {
+	// 		vmid, err = strconv.Atoi(flag.Args()[len(flag.Args())-1])
+	// 		if err != nil {
+	// 			vmid = 0
+	// 		}
+	// 	} else if flag.Args()[0] == "idstatus" {
+	// 		vmid = 0
+	// 	}
+	// }
 
 	var jbody interface{}
 	var vmr *proxmox.VmRef
 
-	if len(flag.Args()) == 0 {
-		fmt.Printf("Missing action, try start|stop vmid\n")
-		os.Exit(0)
-	}
+	// if len(flag.Args()) == 0 {
+	// 	fmt.Printf("Missing action, try start|stop vmid\n")
+	// 	os.Exit(0)
+	// }
+	action := "getConfig"
+	action = "getNodes"
+	action = "createQemu"
+	vmid := 100
+	vmid = 107
+	node := "node1"
 
-	switch flag.Args()[0] {
+	switch action {
 	case "start":
 		vmr = proxmox.NewVmRef(vmid)
 		jbody, _ = c.StartVm(vmr)
@@ -59,10 +68,17 @@ func maina() {
 		jbody, _ = c.StopVm(vmr)
 
 	case "destroy":
-		vmr = proxmox.NewVmRef(vmid)
-		jbody, err = c.StopVm(vmr)
+		// vmr = proxmox.NewVmRef(vmid)
+		// jbody, err = c.StopVm(vmr)
+		// failError(err)
+		// jbody, _ = c.DeleteVm(vmr)
+
+	case "getNodes":
+		nodeList, err := c.GetNodeList()
 		failError(err)
-		jbody, _ = c.DeleteVm(vmr)
+		cj, err := json.MarshalIndent(nodeList, "", "  ")
+		log.Println(string(cj))
+		fmt.Println(string(cj))
 
 	case "getConfig":
 		vmr = proxmox.NewVmRef(vmid)
@@ -78,6 +94,7 @@ func maina() {
 		failError(err)
 		cj, err := json.MarshalIndent(config, "", "  ")
 		log.Println(string(cj))
+		fmt.Println(string(cj))
 
 	case "getNetworkInterfaces":
 		vmr = proxmox.NewVmRef(vmid)
@@ -88,13 +105,130 @@ func maina() {
 		networkInterfaceJson, err := json.Marshal(networkInterfaces)
 		fmt.Println(string(networkInterfaceJson))
 
-	case "createQemu":
+	case "createQemuJson":
 		config, err := proxmox.NewConfigQemuFromJson(os.Stdin)
 		failError(err)
 		vmr = proxmox.NewVmRef(vmid)
 		vmr.SetNode(flag.Args()[2])
 		failError(config.CreateVm(vmr, c))
 		log.Println("Complete")
+
+	case "createQemu":
+		/**
+		{
+			"vmid": 0,
+			"name": "mail.dextion.com",
+			"desc": "",
+			"bios": "seabios",
+			"onboot": true,
+			"agent": 0,
+			"memory": 2048,
+			"balloon": 0,
+			"os": "l26",
+			"cores": 2,
+			"sockets": 1,
+			"vcpus": 0,
+			"cpu": "host",
+			"numa": false,
+			"kvm": true,
+			"hotplug": "network,disk,usb",
+			"iso": "local:iso/ubuntu-20.04.1-live-server-amd64.iso",
+			"fullclone": null,
+			"boot": "cdn",
+			"bootdisk": "scsi0",
+			"scsihw": "virtio-scsi-pci",
+			"disk": {
+				"0": {
+				"file": "vm-100-disk-0",
+				"format": "raw",
+				"size": "150G",
+				"slot": 0,
+				"storage": "datadisk",
+				"storage_type": "lvm",
+				"type": "scsi",
+				"volume": "datadisk:vm-100-disk-0"
+				}
+			},
+			"unused_disk": {},
+			"network": {
+				"0": {
+				"bridge": "vmbr0",
+				"firewall": true,
+				"id": 0,
+				"macaddr": "9A:2B:2C:6F:D5:A1",
+				"model": "virtio"
+				}
+			},
+			"tags": "",
+			"diskGB": 0,
+			"storage": "",
+			"storageType": "",
+			"nic": "",
+			"bridge": "",
+			"vlan": -1,
+			"mac": "",
+			"ciuser": "",
+			"cipassword": "",
+			"cicustom": "",
+			"searchdomain": "",
+			"nameserver": "",
+			"sshkeys": "",
+			"ipconfig0": "",
+			"ipconfig1": "",
+			"ipconfig2": ""
+		}
+		**/
+		config := proxmox.ConfigQemu{
+			VmID:        107,
+			Name:        "Test",
+			Description: "description test",
+			Bios:        "seabios",
+			Onboot:      true,
+			Agent:       0,
+			Memory:      2048,
+			Balloon:     0,
+			QemuOs:      "l26",
+			QemuCores:   2,
+			QemuSockets: 1,
+			QemuVcpus:   0,
+			QemuCpu:     "host",
+			QemuNuma:    false,
+			QemuKVM:     true,
+			Hotplug:     "network,disk,usb",
+			QemuIso:     "local:iso/ubuntu-20.04.1-live-server-amd64.iso",
+			FullClone:   nil,
+			Boot:        "cdn",
+			BootDisk:    "scsi0",
+			Scsihw:      "virtio-scsi-pci",
+			QemuDisks: proxmox.QemuDevices{
+				0: {
+					"format":       "raw",
+					"size":         "150G",
+					"storage":      "datadisk",
+					"storage_type": "lvm",
+					"type":         "scsi",
+				},
+			},
+			QemuNetworks: proxmox.QemuDevices{
+				0: {
+					"bridge":   "vmbr0",
+					"firewall": true,
+					"model":    "virtio",
+				},
+			},
+			// QemuUnusedDisks:config.QemuDevices{},
+			// QemuVga: config.QemuDevice{},
+			// QemuSerials: config.QemuSerials{},
+			HaState: "",
+			Tags:    "",
+			// CIuser:     "root",
+			// CIpassword: "roots",
+			// Ipconfig0:"",
+		}
+		vmr = proxmox.NewVmRef(vmid)
+		vmr.SetNode(node)
+		failError(config.CreateVm(vmr, c))
+		log.Println("Completed")
 
 	case "createLxc":
 		config, err := proxmox.NewConfigLxcFromJson(os.Stdin)

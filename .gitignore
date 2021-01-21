@@ -1,2 +1,4 @@
 proxmox-api-go
 .vagrant/
+.env
+*.env

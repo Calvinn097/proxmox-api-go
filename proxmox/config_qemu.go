@@ -26,34 +26,35 @@ type (
 )
 
 // ConfigQemu - Proxmox API QEMU options
+// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/qemu
 type ConfigQemu struct {
-	VmID            int         `json:"vmid"`
-	Name            string      `json:"name"`
-	Description     string      `json:"desc"`
-	Pool            string      `json:"pool,omitempty"`
-	Bios            string      `json:"bios"`
-	Onboot          bool        `json:"onboot"`
-	Agent           int         `json:"agent"`
-	Memory          int         `json:"memory"`
-	Balloon         int         `json:"balloon"`
-	QemuOs          string      `json:"os"`
-	QemuCores       int         `json:"cores"`
-	QemuSockets     int         `json:"sockets"`
-	QemuVcpus       int         `json:"vcpus"`
-	QemuCpu         string      `json:"cpu"`
-	QemuNuma        bool        `json:"numa"`
-	QemuKVM         bool        `json:"kvm"`
-	Hotplug         string      `json:"hotplug"`
-	QemuIso         string      `json:"iso"`
-	FullClone       *int        `json:"fullclone"`
-	Boot            string      `json:"boot"`
-	BootDisk        string      `json:"bootdisk,omitempty"`
-	Scsihw          string      `json:"scsihw,omitempty"`
-	QemuDisks       QemuDevices `json:"disk"`
+	VmID            int         `json:"vmid"`           // The unique ID of the VM.
+	Name            string      `json:"name"`           // Set a name for the VM. Only used on the configuration web interface.
+	Description     string      `json:"desc"`           // Description for the VM. Only used on the configuration web interface. This is saved as comment inside the configuration file.
+	Pool            string      `json:"pool,omitempty"` //Add the VM to the specified pool.
+	Bios            string      `json:"bios"` // Select BIOS Implementation.
+	Onboot          bool        `json:"onboot"` // Sepcifies wheter a VM will be started during system bootup.
+	Agent           int         `json:"agent"` // Enable/disable Qemu GuestAgent and its properties.
+	Memory          int         `json:"memory"` // Amount of RAM for the VM in MB. This is the maximum available memory when you use the balloon device. (16-N) default 512
+	Balloon         int         `json:"balloon"` // Amount of target RAM for the VM in MB. Using zero disables the balloon driver. (0-N).
+	QemuOs          string      `json:"os"` //ostype Specify guest operating system. This is used to enable special optimization/features for specific operating systems.
+	QemuCores       int         `json:"cores"` // cores The number of cores per socket. 1 (1-N)
+	QemuSockets     int         `json:"sockets"` // The number of CPU sockets. 1 (1-N)
+	QemuVcpus       int         `json:"vcpus"` // Number of hotplugged vpus.
+	QemuCpu         string      `json:"cpu"` // Emulated CPU Type.
+	QemuNuma        bool        `json:"numa"` // Enable/Disable NUMA
+	QemuKVM         bool        `json:"kvm"` // Enable/disable KVM hardware virtualization
+	Hotplug         string      `json:"hotplug"` //  Selectively enable hotplug features. This is a comma separated list of hotplug features: 'network disk cpu memory and usb. Use '0' to disable hotplug completely. value '1'is an alias for the default 'network, disk, usb' (network, disk, usb)
+	QemuIso         string      `json:"iso"` // This is an alias for option -ide2
+	FullClone       *int        `json:"fullclone"` 
+	Boot            string      `json:"boot"` // Specify guest boot order. Use with 'order=', usage with no key or 'legacy=' id deprecated.
+	BootDisk        string      `json:"bootdisk,omitempty"` // Enable booting from specified disk. Deprecated: Use 'boot: order=foo;bar' instead.
+	Scsihw          string      `json:"scsihw,omitempty"` // SCSI controller model
+	QemuDisks       QemuDevices `json:"disk"` // 
 	QemuUnusedDisks QemuDevices `json:"unused_disk"`
 	QemuVga         QemuDevice  `json:"vga,omitempty"`
 	QemuNetworks    QemuDevices `json:"network"`
-	QemuSerials     QemuDevices `json:"serial,omitempty"`
+	QemuSerials     QemuDevices `json:"serial,omitempty"` // create a serial device inside the vm (n is 0 to 3), and pass through a host serial device, or create unix socket on the host side
 	HaState         string      `json:"hastate,omitempty"`
 	Tags            string      `json:"tags"`
 
@@ -83,7 +84,7 @@ type ConfigQemu struct {
 	Ipconfig2 string `json:"ipconfig2"`
 }
 
-// CreateVm - Tell Proxmox API to make the VM
+// CreateVm - Tell Proxmox API to mNewVmRefake the VM
 func (config ConfigQemu) CreateVm(vmr *VmRef, client *Client) (err error) {
 	if config.HasCloudInit() {
 		return errors.New("Cloud-init parameters only supported on clones or updates")
