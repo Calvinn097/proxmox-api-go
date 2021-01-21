@@ -51,10 +51,10 @@ func main() {
 	// 	os.Exit(0)
 	// }
 	action := "getConfig"
-	action = "getNodes"
-	action = "createQemu"
-	vmid := 100
-	vmid = 107
+	// action = "getNodes"
+	// action = "createQemu"
+	vmid := 108
+	vmid = 108
 	node := "node1"
 
 	switch action {
@@ -179,7 +179,7 @@ func main() {
 		}
 		**/
 		config := proxmox.ConfigQemu{
-			VmID:        107,
+			VmID:        108,
 			Name:        "Test",
 			Description: "description test",
 			Bios:        "seabios",
