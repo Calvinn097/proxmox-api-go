@@ -15,7 +15,7 @@ import (
 func main() {
 	insecurevar := true
 	debugvar := false
-	taskTimeoutvar, _ := strconv.Atoi(os.Getenv("TIMEOUT"))
+	taskTimeoutvar, _ := strconv.Atoi(os.Getenv("TASK_TIMEOUT"))
 	var insecure *bool
 	insecure = &insecurevar        //, false, "TLS insecure mode")
 	proxmox.Debug = &debugvar      //, false, "debug mode")
@@ -51,8 +51,9 @@ func main() {
 	// 	os.Exit(0)
 	// }
 	action := "getConfig"
-	// action = "getNodes"
-	// action = "createQemu"
+	action = "getNodes"
+	action = "createQemu"
+	// action = "destroy"
 	vmid := 108
 	vmid = 108
 	node := "node1"
@@ -68,10 +69,10 @@ func main() {
 		jbody, _ = c.StopVm(vmr)
 
 	case "destroy":
-		// vmr = proxmox.NewVmRef(vmid)
-		// jbody, err = c.StopVm(vmr)
-		// failError(err)
-		// jbody, _ = c.DeleteVm(vmr)
+		vmr = proxmox.NewVmRef(vmid)
+		jbody, err = c.StopVm(vmr)
+		failError(err)
+		jbody, _ = c.DeleteVm(vmr)
 
 	case "getNodes":
 		nodeList, err := c.GetNodeList()
